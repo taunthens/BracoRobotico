@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle do Braço Robótico</title>
+  <style>
+    #control {
+      width: 400px;
+      height: 400px;
+      border: 1px solid black;
+      position: relative;
+    }
+
+    .joint {
+      width: 20px;
+      height: 20px;
+      background-color: red;
+      border-radius: 50%;
+      position: absolute;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Controle do Braço Robótico</h1>
+  <div id="control">
+    <div id="joint1" class="joint"></div>
+    <div id="joint2" class="joint"></div>
+    <div id="joint3" class="joint"></div>
+    <div id="joint4" class="joint"></div>
+  </div>
+
+  <script>
+    const control = document.getElementById('control');
+    const joints = document.querySelectorAll('.joint');
+
+    // Função para enviar comandos para o Arduino
+    function enviarComando(servo, angulo) {
+      // Implemente aqui a lógica para enviar o comando para o Arduino via WebSocket
+      console.log(`Enviando comando para o servo ${servo} com ângulo ${angulo}`);
+    }
+
+    // Adiciona um event listener para cada junta do braço
+    joints.forEach((joint, index) => {
+      joint.addEventListener('mousedown', (event) => {
+        event.preventDefault(); // Evita a seleção de texto quando arrasta o mouse
+        moveJoint(index, event);
+        document.addEventListener('mousemove', moveJoint.bind(null, index));
+        document.addEventListener('mouseup', () => {
+          document.removeEventListener('mousemove', moveJoint.bind(null, index));
+        });
+      });
+    });
+
+    // Função para mover uma junta
+    function moveJoint(index, event) {
+      const rect = control.getBoundingClientRect();
+      let x = event.clientX - rect.left; // Posição horizontal do mouse dentro do controle
+      let y = event.clientY - rect.top; // Posição vertical do mouse dentro do controle
+
+      // Limita as coordenadas para evitar que a junta saia do controle
+      x = Math.max(0, Math.min(x, control.offsetWidth));
+      y = Math.max(0, Math.min(y, control.offsetHeight));
+
+      // Calcula o ângulo com base na posição do mouse
+      const angulo = Math.atan2(y - 200, x - 200) * (180 / Math.PI);
+
+      // Envia o comando para o Arduino
+      enviarComando(index + 1, angulo);
+      
+      // Move visualmente a junta para a nova posição
+      joints[index].style.left = `${x}px`;
+      joints[index].style.top = `${y}px`;
+    }
+  </script>
+</body>
+</html>
